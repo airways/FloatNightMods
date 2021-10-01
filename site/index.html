@@ -1,6 +1,44 @@
 <html>
 <head>
 <title>Airways' Float Night Mods</title>
+<style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+p {
+    font-size: 18px;
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.modal-content img {
+    max-width: 90%;
+}
+
+.modal-content .close {
+float:right;
+}
+
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -17,19 +55,49 @@ background: linear-gradient(180deg, rgba(2,0,36,1) 0%, rgba(0,102,204,1) 76%, rg
 	
 	<p><u>The mods:</u></p>
 	
-	<p><b><a href="https://raw.githubusercontent.com/airways/FloatNightMods/main/CleanUp.cs" download>CleanUp</a></b><br/>
-		Removes all the junk from the starting area.
+	<p><b><a href="https://raw.githubusercontent.com/airways/FloatNightMods/main/CleanUp.cs" download>CleanUp.cs</a></b>
+        &mdash; <a class="screenshotLink" id="cleanup" href="#">Screenshot</a>
+        <br/>
+		Removes all the junk from the starting area.<br/>
+        
 	</p>
 	
 	<p><u>Installation:</u></p>
 	<p>
-	1. Install <a href="https://github.com/BepInEx/BepInEx/releases" >BepInEx</a> in your <b>Steam\steamapps\common\Float Night</b> folder. It should have a new folder named <b>BepInEx</b> with a sub-folder named <b>plugins</b> amongst others.</br>
+	1. Install <a href="https://github.com/BepInEx/BepInEx/releases">BepInEx</a> in your <b>Steam\steamapps\common\Float Night</b> folder.<br/> 
+    &nbsp;&nbsp;&nbsp;&nbsp;※ This should have a new folder named <b>BepInEx</b> with a sub-folder named <b>plugins</b> amongst others.</br>
 	2. Install <a href="https://github.com/ghorsington/BepInEx.ScriptLoader/releases">ScriptLoader.dll</a> to <b>Steam\steamapps\common\Float Night\BepInEx\Plugins</b></br>
 	3. Create a new Scripts folder next to Float Night's main program XuanYe.exe</br>
-	4. Download these files to Scripts, and <i>make sure they have a .cs extension and no extra extension</i> (if you don't know how to do that, read <a href="https://knowledge.autodesk.com/search-result/caas/sfdcarticles/sfdcarticles/How-to-enable-hidden-file-extensions-in-Windows.html" >turn off hide extensions in explorer<a/> first then make sure the filenames look exactly as they appear on this page)</br>
+	4. Download these files to Scripts, and <i>make sure they have a .cs extension and no extra extension</i>.<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;※ If you don't know how to do that, read <a href="https://knowledge.autodesk.com/search-result/caas/sfdcarticles/sfdcarticles/How-to-enable-hidden-file-extensions-in-Windows.html" >turn off hide extensions in explorer<a/> first then make sure the filenames look exactly as they appear on this page.</br>
 	</p>
+    
+    <p><u>Other Notes:</u></p>
+	<p>※ Please <a href="https://steamcommunity.com/app/958280/discussions/0/2957167122120968762/">visit my Float Night forum thread</a> for any questions or issues!</p>
 	
 	
-	
+    <div id="cleanup_content" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p><b>CleanUp.cs</b></p>
+            <p><img src="screenshots/CleanUp.png" /></p>
+            <p>Most of the junk removed!</p>
+        </div>
+    </div>
+    
+    <script>
+    $(document).ready(function() {
+        $('.screenshotLink').click(function(event) {
+            event.preventDefault;
+            var id = $(event.target).attr('id');
+            var $content = $('#'+id+'_content');
+            $content.css('display', 'block');
+        });
+        
+        $('.modal').click(function(event) {
+            $('.modal').css('display', 'none');
+        });
+    });
+    </script>
 </body>
 </html>
