@@ -12,7 +12,6 @@ public static class MeatIsFood {
     public const string ModName = "Airways' MeatIsFood";
     public const string ModShortName = "MeatIsFood";
     public const string ModVersion = "1.0.0";
-    private static Harmony harmony;
     
     public static void Main() {
         Log("==================================================");

@@ -10,7 +10,6 @@ public static class CleanUp {
     public const string ModName = "Airways' CleanUp";
     public const string ModShortName = "CleanUp";
     public const string ModVersion = "1.0.0";
-    private static Harmony harmony;
     
     public static void Main() {
         Log("==================================================");
@@ -27,11 +26,11 @@ public static class CleanUp {
     
 }
 
-[HarmonyPatch(typeof(BuildStorage))]
-[HarmonyPatch("LoadDataFile")]
-public class CleanUp_BuildStorage_LoadDataFile
+[HarmonyPatch(typeof(Player))]
+[HarmonyPatch("Awake")]
+public class CleanUp_Player_Awake
 {
-    public static void Postfix()
+    public static bool Prefix()
     {
         CleanUp.Log("==================================================");
         CleanUp.Log("Cleanup starting area junk");
@@ -47,5 +46,7 @@ public class CleanUp_BuildStorage_LoadDataFile
         
         // Change price of a shop item
         //UnityEngine.Object.FindObjectOfType<Devdog.Rucksack.Vendors.ItemVendorCreator>()._itemDefs[0].buyPrice[0].amount = 1
+        
+        return true;
     }
 }
