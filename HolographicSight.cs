@@ -1,8 +1,30 @@
+/**
+ * Settings File: Steam/steamapps/common/Float Night/XuanYe_Data/HolographicSight.ini
+ * Format:
+ *      [Settings]
+ *      Mode=ACOGSight|NoSight|HolographicSight|IronSight
+ *
+ * Instructions:
+ *      Set one value from the list on the Mode line. Example:
+ *      
+ *      [Settings]
+ *      Mode=NoSight
+ *
+ */
+// System
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+
+// Unity
 using UnityEngine;
 using HarmonyLib;
-using System.Linq;
-using System.Collections;
+
+// Game
 using Devdog.General2;
 using EasyBuildSystem.Runtimes.Internal.Storage;
 
@@ -11,10 +33,20 @@ public static class HolographicSight {
     public const string ModName = "Airways' HolographicSight";
     public const string ModShortName = "HolographicSight";
     public const string ModVersion = "1.0.0";
+    public static string Mode;
     
     public static void Main() {
         Log("==================================================");
         Log("Loading " + ModID + "...");
+        Log("Config file: " + IniFile.path);
+        
+        // Read settings, set any defaults needed, then re-write file for player reference
+        Mode = IniFile.Read("Settings", "Mode");
+        if(String.IsNullOrEmpty(Mode)) {
+            Mode = "NoSight";
+            IniFile.Write("Settings", "!Mode", "This value can be one of these: ACOGSight|NoSight|HolographicSight|IronSight");
+            IniFile.Write("Settings", "Mode", Mode);
+        }
     }
 
     public static void Unload() {
@@ -40,6 +72,41 @@ public static class HolographicSight {
         return objectsInScene;
     }
     
+    private class IniFile : MonoBehaviour
+    {
+        public static string path = Application.dataPath + "/"  + ModID + ".ini";
+        [DllImport("kernel32")]
+        public static extern long WritePrivateProfileString(string section,
+            string key, string val, string filePath);
+        [DllImport("kernel32")]
+        public static extern int GetPrivateProfileString(string section,
+                 string key, string def, StringBuilder retVal,
+            int size, string filePath);
+        [DllImport("kernel32")]
+        public static extern int GetLastError();
+     
+        public static void Write(string Section, string Key, string Value)
+        {
+            if(WritePrivateProfileString(Section, Key, Value, path) == 0) {
+                Log("IniFile.Write failed, error: " + GetLastError().ToString());
+            } else {
+                Log("IniFile.Write okay " + Section + "." + Key + "=" + Value);
+            }
+        }
+        public static string Read(string Section, string Key)
+        {
+            StringBuilder temp = new StringBuilder(255);
+            //int i = GetPrivateProfileString(Section, Key, "", temp, 255, this.path);
+            if(GetPrivateProfileString(Section, Key, "", temp, 255, path) == 0) {
+                Log("IniFile.Read failed, error: " + GetLastError().ToString());
+            } else {
+                Log("IniFile.Read okay " + Section + "." + Key);
+            }
+            return temp.ToString();
+     
+        }
+    }
+
 }
 
 [HarmonyPatch(typeof(Player))]
@@ -50,6 +117,7 @@ public class HolographicSight_Player_Awake
     {
         HolographicSight.Log("==================================================");
         HolographicSight.Log("HolographicSight patching...");
+        HolographicSight.Log("Mode: " + HolographicSight.Mode);
         
         // Hide ACOG frame and repurpose lense into a "projected" red-dot lense
         GameObject fpo = UnityEngine.GameObject.Find("First Person Objects");
@@ -57,89 +125,88 @@ public class HolographicSight_Player_Awake
         HolographicSight.Log("First Person Objects:");
         Debug.Log(fpo);
         
-        HolographicSight.Log("Rifle:");
         ArrayList rifle = HolographicSight.GetAllObjectsOnlyInScene("Rifle");
-        Debug.Log(rifle.Count);
+        
+        HolographicSight.Log("Rifle:count="+rifle.Count.ToString());
+        
+        
+        GameObject ACOGSight = null;
+        GameObject IronSight = null;
+        
         if(rifle.Count == 0) {
-            HolographicSight.Log("ERROR: Rifle not found, can't patch!");
+            HolographicSight.Log("***** ***** ERROR: Rifle not found, can't patch! ***** *****");
         } else {
             Debug.Log(rifle[0]);
             
             for(int i = 0; i <= rifle.Count; i++) {
                 GameObject go = (GameObject)rifle[i];
-                HolographicSight.Log("rifle[].ACOG_Sight_002 ["+i.ToString() + "]:");
-                Debug.Log(go.transform.Find("ACOG_Sight_002"));
+                //HolographicSight.Log("rifle[].ACOG_Sight_002 ["+i.ToString() + "]:");
+                //Debug.Log(go.transform.Find("ACOG_Sight_002"));
                 
-                HolographicSight.Log("rifle[].ACOG Sight ["+i.ToString() + "]:");
-                Transform ts = go.transform.Find("ACOG Sight");
-                Debug.Log(ts);
-                if(ts != null) {
-                    ts.gameObject.SetActive(false);
+                //HolographicSight.Log("rifle[].ACOG Sight ["+i.ToString() + "]:");
+                Transform ts1 = go.transform.Find("ACOG Sight");
+                HolographicSight.Log("***** ACOG Sight = " + ts1?.gameObject?.ToString());
+                if(ts1 != null) {
+                    ACOGSight = ts1.gameObject;
                 }
+                
+                Transform ts2 = go.transform.Find("M4A1_Sopmod_Iron_Sight");
+                HolographicSight.Log("***** M4A1_Sopmod_Iron_Sight = " + ts2?.gameObject?.ToString());
+                if(ts2 != null) {
+                    IronSight = ts2.gameObject;
+                }
+                
+                if(ACOGSight != null && IronSight != null) break;
             }
             
-            //HolographicSight.Log("==================================================");
-            //HolographicSight.Log("Activate rifle");
-            //UnityEngine.GameObject.Find("Rifle").SetActive(true);
-            //Debug.Log(fpo.transform.Find("ACOG_Sight_002"));
-            fpo.transform.Find("ACOG_Sight_002").gameObject.SetActive(false);
+            HolographicSight.Log("Selecting Mode: " + HolographicSight.Mode);
             
-            //GameObject lense = UnityEngine.GameObject.Find("Front_Lens");
-            //GameObject dot = GameObject.Instantiate(UnityEngine.GameObject.Find("Front_Lens"));
-            //dot.transform.position = lense.transform.position;
-            //lense.SetActive(false);
-            //dot.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-            //dot.name = "HolographicSight";
-            //dot.transform.SetParent(lense.transform);
+            switch(HolographicSight.Mode)
+            {
+                case "NoSight":
+                    ACOGSight.SetActive(false);
+                    break;
+                
+                case "IronSight":
+                    ACOGSight.SetActive(false);
+                    IronSight.SetActive(true);
+                    break;
+                
+                case "HolographicSight":
+                    
+                    ArrayList lense = HolographicSight.GetAllObjectsOnlyInScene("Front_Lens");
+                    if(lense.Count == 0) {
+                        HolographicSight.Log("ERROR: Could not find Front_Lens, cannot patch!");
+                    } else {
+                        GameObject lenseCopy = GameObject.Instantiate((GameObject)lense[0]);
+                        GameObject dot = GameObject.Instantiate((GameObject)lense[0]);
+                        lenseCopy.transform.position = ((GameObject)lense[0]).transform.position;
+                        dot.transform.position = ((GameObject)lense[0]).transform.position;
+                        
+                        dot.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+                        dot.name = "HolographicSight";
+                        dot.transform.SetParent(ACOGSight.transform.GetParent());
+                        
+                        ACOGSight.SetActive(false);
+                        
+                        HolographicSight.Log("HolographicSight done!");
+                    }
+                    break;
+                    
+                case "":
+                    HolographicSight.Log("Mode: ACOG Sight (default)");
+                    break;
+                    
+                case "ACOGSight":
+                    HolographicSight.Log("Mode: ACOG Sight (specified)");
+                    break;
+                
+                default:
+                    HolographicSight.Log("ERROR: Invalid Mode: " + HolographicSight.Mode);
+                    break;
+            }
             
-            //HolographicSight.Log("HolographicSight done!");
         }
         return true;
     }
 }
-/*
-[HarmonyPatch(typeof(BuildStorage))]
-[HarmonyPatch("SaveStorageFile")]
-public class HolographicSight_BuildStorage_SaveStorageFile
-{
-    public static void Prefix()
-    {
-        HolographicSight.Log("==================================================");
-        HolographicSight.Log("HolographicSight unpatching for save...");
-        
-        // Hide ACOG frame and repurpose lense into a "projected" red-dot lense
-        GameObject fpo = UnityEngine.GameObject.Find("First Person Objects");
-        
-        HolographicSight.Log("First Person Objects:");
-        Debug.Log(fpo);
-        
-        HolographicSight.Log("Rifle:");
-        ArrayList rifle = HolographicSight.GetAllObjectsOnlyInScene("Rifle");
-        Debug.Log(rifle.Count);
-        if(rifle.Count == 0) {
-            HolographicSight.Log("ERRPR: Rifle not found, can't patch!");
-        } else {
-            Debug.Log(rifle[0]);
-            
-            for(int i = 0; i <= rifle.Count; i++) {
-                GameObject go = (GameObject)rifle[i];
-                HolographicSight.Log("rifle[].ACOG_Sight_002 ["+i.ToString() + "]:");
-                Debug.Log(go.transform.Find("ACOG_Sight_002"));
-                
-                HolographicSight.Log("rifle[].ACOG Sight ["+i.ToString() + "]:");
-                Transform ts = go.transform.Find("ACOG Sight");
-                Debug.Log(ts);
-                if(ts != null) {
-                    ts.gameObject.SetActive(true);
-                }
-            }
-        }
-    }
-    
-    public static void Postfix()
-    {
-        // Repatch after save
-        HolographicSight_BuildStorage_LoadDataFile.Prefix();
-    }
-}
-*/
